@@ -7,21 +7,22 @@ var createFloodDeck = function() {
     var color = colors[i];
     for (var j = 0; j < 6; j++) {
       var isTemple = false;
-      var isStart = undefined;
+      var isStartFor = null;
+      var pawn = null;
 
       if (j === 0 || j === 1) {
         isTemple = true;
       }
 
       if (j === 5 && color === colors[0]) {
-        isStart = 'black';
+        pawn = 'black';
       }
 
       if (j === 5 && color === colors[3]) {
-        isStart = 'white';
+        pawn = 'white';
       }
 
-      var properties = {name: color + j, color: color, temple: isTemple, start: isStart};
+      var properties = {name: color + j, color: color, temple: isTemple, pawn: pawn};
       floodDeck.push(properties);
     }
   }
@@ -53,14 +54,26 @@ var treasureDeck = [];
 var player1Hand = [];
 var player2Hand = [];
 
-console.log('island tiles: ', islandTiles);
-
 var island = d3.selectAll('td').data(islandTiles);
 
-island.attr('height', '50px')
-  .attr('width', '50px')
+island.attr('height', '75px')
+  .attr('width', '75px')
   .style('background-color', function(data) {
     if (data) {
       return data.color;
     }
+  })
+  .style('align', 'center')
+  .style('position', 'relative')
+  .html(function(data) {
+    var html = '';
+
+    if (data && data.temple) {
+      html += '<img src="assets/treasureChest.png" height=70px width=70px style="top: 0; position: absolute; z-index: 50">';
+    }
+    if (data && data.pawn) {
+      html += '<img src=assets/' + data.pawn + '.png height=70px width=70px style="top: 0; position: absolute; z-index: 100">';
+    }
+    console.log(html);
+    return html;
   });
