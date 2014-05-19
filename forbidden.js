@@ -1,4 +1,4 @@
-var colors = ['red', 'blue', 'yellow', 'purple'];
+var colors = ['red', 'teal', 'orange', 'purple'];
 
 var createFloodDeck = function() {
   var floodDeck = [];
@@ -21,7 +21,7 @@ var createFloodDeck = function() {
         isStart = 'white';
       }
 
-      var properties = {color: color + j, temple: isTemple, start: isStart};
+      var properties = {name: color + j, color: color, temple: isTemple, start: isStart};
       floodDeck.push(properties);
     }
   }
@@ -47,10 +47,20 @@ var createIslandTiles = function(floodDeck) {
 };
 
 var floodDeck = createFloodDeck(); // {color: red/blue/yellow/purple, temple: true/false, start: black/white/undefined}
-_.shuffle(floodDeck);
+floodDeck = _.shuffle(floodDeck);
 var islandTiles = createIslandTiles(floodDeck);
 var treasureDeck = [];
 var player1Hand = [];
 var player2Hand = [];
 
 console.log('island tiles: ', islandTiles);
+
+var island = d3.selectAll('td').data(islandTiles);
+
+island.attr('height', '50px')
+  .attr('width', '50px')
+  .style('background-color', function(data) {
+    if (data) {
+      return data.color;
+    }
+  });
