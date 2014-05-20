@@ -41,17 +41,17 @@ var createFloodDeck = function() {
         pawn.white = true;
       }
 
-      var properties = {name: color + j, color: color, temple: isTemple, pawn: pawn, status: 'afloat'};
+      var properties = {name: color + j, color: color, temple: isTemple, pawn: pawn, status: 'afloat', rise: false};
       floodDeck.push(properties);
     }
   }
 
-  return floodDeck;
+  return _.shuffle(floodDeck);
 };
 
 var createIslandTiles = function(floodDeck) {
   var islandTiles = [];
-  var floodDeck = floodDeck.slice();
+  var floodDeck = _.shuffle(floodDeck.slice());
 
   for (var i = 0; i < 6; i++) {
     for (var j = 0; j < 6; j++) {
@@ -66,15 +66,43 @@ var createIslandTiles = function(floodDeck) {
   return islandTiles;
 };
 
+var createTreasureDeck = function(floodDeck) {
+  var treasureDeck = _.shuffle(floodDeck.slice());
+
+  for (var i = 0; i < 3; i++) {
+    treasureDeck.push({rise: true});
+  }
+
+  return _.shuffle(treasureDeck);
+};
+
+var flood = function(waterLevel) {
+  console.log('Water is rising!');
+};
+
+var drawTreasures = function(count, drawDeck, destination, discardDeck) {
+  for (var i = 0; i < count; i++) {
+    var drawnCard = drawDeck.pop();
+
+    if (drawnCard.rise) {
+      flood(d3.select('.waterLevel').text());
+      discardDeck.push(drawnCard);
+    } else {
+      destination.push(drawnCard);
+    }
+  }
+};
 
 var floodDeck = createFloodDeck();
-floodDeck = _.shuffle(floodDeck);
+var floodDiscardDeck = [];
 var islandTiles = createIslandTiles(floodDeck);
-floodDeck = _.shuffle(floodDeck);
-
-var treasureDeck = [];
+var treasureDeck = createTreasureDeck(floodDeck);
+var treasureDiscardDeck = [];
 var player1Hand = [];
 var player2Hand = [];
+drawTreasures(2, treasureDeck, player1Hand, treasureDiscardDeck);
+drawTreasures(2, treasureDeck, player2Hand, treasureDiscardDeck);
+
 var focus = null;
 
 var island = d3.selectAll('td').data(islandTiles);
