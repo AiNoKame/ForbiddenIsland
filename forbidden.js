@@ -1,6 +1,6 @@
 var refreshRate = 500;
 var islandTileSize = '75px';
-var handCardSize = '50px';
+var handCardSize = '30px';
 var colors = ['red', 'teal', 'orange', 'purple'];
 var pieceColors = ['black', 'white'];
 
@@ -79,47 +79,6 @@ var createTreasureDeck = function(floodDeck) {
   return _.shuffle(treasureDeck);
 };
 
-var flood = function(islandTiles, tileName) {
-  for (var i = 0; i , islandTiles.length; i++) {
-    if (islandTiles[i] && tileName === islandTiles[i].name) {
-      if (islandTiles[i].status === 'afloat') {
-        islandTiles[i].status = 'sinking';
-      } else if (islandTiles[i].status === 'sinking') {
-        islandTiles[i] = null;
-      }
-      return;
-    }
-  }
-};
-
-var raiseWaterLevel = function(waterLevel) {
-  console.log('Water is rising!');
-  var currentWaterLevel = d3.select('.waterLevel').text();
-  d3.select('.waterLevel').text(+currentWaterLevel + 1);
-};
-
-var drawTreasures = function(count, drawDeck, destination, discardDeck) {
-  for (var i = 0; i < count; i++) {
-    var drawnCard = drawDeck.pop();
-
-    if (drawnCard.rise) {
-      raiseWaterLevel(d3.select('.waterLevel').text());
-      discardDeck.push(drawnCard);
-    } else {
-      destination.push(drawnCard);
-    }
-  }
-};
-
-var drawFloods = function(count, drawDeck, destination, discardDeck) {
-  for (var i = 0; i < count; i++) {
-    var drawnCard = drawDeck.pop();
-
-    discardDeck.push(drawnCard);
-    flood(destination, drawnCard.name);
-  }
-};
-
 var floodDeck = createFloodDeck();
 var floodDiscardDeck = [];
 var islandTiles = createIslandTiles(floodDeck);
@@ -127,9 +86,70 @@ var treasureDeck = createTreasureDeck(floodDeck);
 var treasureDiscardDeck = [];
 var player1Hand = [];
 var player2Hand = [];
-drawFloods(6, floodDeck, islandTiles, floodDiscardDeck);
-drawTreasures(2, treasureDeck, player1Hand, treasureDiscardDeck);
-drawTreasures(2, treasureDeck, player2Hand, treasureDiscardDeck);
+
+var raiseWaterLevel = function() {
+  console.log('Water is rising!');
+  var currentWaterLevel = d3.select('.waterLevel').text();
+  var newWaterLevel = +currentWaterLevel + 1;
+  d3.select('.waterLevel').text(newWaterLevel);
+
+  floodDeck.concat(_.shuffle(floodDiscardDeck.slice()));
+  floodDiscardDeck = [];
+  drawFloods(newWaterLevel);
+};
+
+var drawTreasures = function(count, destination) {
+  for (var i = 0; i < count; i++) {
+    var drawnCard = treasureDeck.pop();
+
+    if (!treasureDeck.length) {
+      treasureDeck = _.shuffle(treasureDiscardDeck.slice());
+      treasureDiscardDeck = [];
+    }
+
+    if (drawnCard.rise) {
+      raiseWaterLevel();
+      treasureDiscardDeck.push(drawnCard);
+    } else {
+      destination.push(drawnCard);
+    }
+  }
+};
+
+var flood = function(tileName) {
+  for (var i = 0; i , islandTiles.length; i++) {
+    if (islandTiles[i] && tileName === islandTiles[i].name) {
+      if (islandTiles[i].status === 'afloat') {
+        islandTiles[i].status = 'sinking';
+      } else if (islandTiles[i].status === 'sinking') {
+        islandTiles[i] = null;
+        floodDiscardDeck.pop();
+      }
+      return;
+    }
+  }
+};
+
+var drawFloods = function(count) {
+  for (var i = 0; i < count; i++) {
+    var drawnCard = floodDeck.pop();
+
+    if (!floodDeck.length) {
+      console.log(floodDeck.length);
+      console.log('reshuffling flood deck');
+      floodDeck = _.shuffle(floodDiscardDeck.slice());
+      floodDiscardDeck = [];
+      console.log(floodDeck.length);
+    }
+
+    floodDiscardDeck.push(drawnCard);
+    flood(drawnCard.name);
+  }
+};
+
+drawFloods(6);
+drawTreasures(2, player1Hand);
+drawTreasures(2, player2Hand);
 
 var focus = null;
 
@@ -191,6 +211,8 @@ var updateHands = function() {
 };
 
 var updateIsland = function() {
+  var island = d3.selectAll('.islandTile').data(islandTiles);
+
   island.transition().duration(1000)
     .style('background-color', function(data) {
       if (data) {
@@ -198,7 +220,7 @@ var updateIsland = function() {
           case 'afloat':
             return data.color;
           case 'sinking':
-            return 'darkblue';
+            return 'skyblue';
         }
       }
     });

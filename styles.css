@@ -8,6 +8,7 @@ body {
 }
 
 .water {
+  background: url(assets/water.jpg);
   width: 500px;
   height: 500px;
 }
