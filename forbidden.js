@@ -1,4 +1,6 @@
 var refreshRate = 500;
+var islandTileSize = '75px';
+var handCardSize = '50px';
 var colors = ['red', 'teal', 'orange', 'purple'];
 var pieceColors = ['black', 'white'];
 
@@ -21,6 +23,7 @@ var createFloodDeck = function() {
 
   for (var i = 0; i < colors.length; i++) {
     var color = colors[i];
+
     for (var j = 0; j < 6; j++) {
       var isTemple = false;
       var isStartFor = null;
@@ -76,8 +79,23 @@ var createTreasureDeck = function(floodDeck) {
   return _.shuffle(treasureDeck);
 };
 
-var flood = function(waterLevel) {
+var flood = function(islandTiles, tileName) {
+  for (var i = 0; i , islandTiles.length; i++) {
+    if (islandTiles[i] && tileName === islandTiles[i].name) {
+      if (islandTiles[i].status === 'afloat') {
+        islandTiles[i].status = 'sinking';
+      } else if (islandTiles[i].status === 'sinking') {
+        islandTiles[i] = null;
+      }
+      return;
+    }
+  }
+};
+
+var raiseWaterLevel = function(waterLevel) {
   console.log('Water is rising!');
+  var currentWaterLevel = d3.select('.waterLevel').text();
+  d3.select('.waterLevel').text(+currentWaterLevel + 1);
 };
 
 var drawTreasures = function(count, drawDeck, destination, discardDeck) {
@@ -85,11 +103,20 @@ var drawTreasures = function(count, drawDeck, destination, discardDeck) {
     var drawnCard = drawDeck.pop();
 
     if (drawnCard.rise) {
-      flood(d3.select('.waterLevel').text());
+      raiseWaterLevel(d3.select('.waterLevel').text());
       discardDeck.push(drawnCard);
     } else {
       destination.push(drawnCard);
     }
+  }
+};
+
+var drawFloods = function(count, drawDeck, destination, discardDeck) {
+  for (var i = 0; i < count; i++) {
+    var drawnCard = drawDeck.pop();
+
+    discardDeck.push(drawnCard);
+    flood(destination, drawnCard.name);
   }
 };
 
@@ -100,32 +127,19 @@ var treasureDeck = createTreasureDeck(floodDeck);
 var treasureDiscardDeck = [];
 var player1Hand = [];
 var player2Hand = [];
+drawFloods(6, floodDeck, islandTiles, floodDiscardDeck);
 drawTreasures(2, treasureDeck, player1Hand, treasureDiscardDeck);
 drawTreasures(2, treasureDeck, player2Hand, treasureDiscardDeck);
 
 var focus = null;
 
-var island = d3.selectAll('td').data(islandTiles);
+var island = d3.selectAll('.islandTile').data(islandTiles);
 
-island.attr('height', '75px')
-  .attr('width', '75px')
+island.attr('height', islandTileSize)
+  .attr('width', islandTileSize)
   .style('background-color', function(data) {
     if (data) {
       return data.color;
-    }
-  })
-  .style('opacity', function(data) {
-    if (data) {
-      switch(data.status) {
-        case 'afloat':
-          return 1;
-        case 'sinking':
-          return 0.2;
-        case 'sunk':
-          return 0;
-      }
-    } else {
-      return 0;
     }
   })
   .style('align', 'center')
@@ -133,33 +147,61 @@ island.attr('height', '75px')
   .html(function(data) {
     var html = '';
 
-    if (data && data.temple) {
-      html += '<img src="assets/treasureChest.png" height=70px width=70px class="temple" style="top: 0; position: absolute; z-index: 0">';
+    if (data) {
+      if (data.temple) {
+        html += '<img src="assets/treasureChest.png" height=70px width=70px class="temple" style="top: 0; position: absolute; z-index: 0">';
+      }
+      if (data.pawn.black) {
+        html += '<img src=assets/black.png height=70px width=70px class="playerPiece black" style="top: 0; position: absolute; z-index: 1">';
+      }
+      if (data.pawn.white) {
+        html += '<img src=assets/white.png height=70px width=70px class="playerPiece white" style="top: 0; position: absolute; z-index: 1">';
+      }
+
+      return html;
     }
-    if (data && data.pawn.black) {
-      html += '<img src=assets/black.png height=70px width=70px class="playerPiece black" style="top: 0; position: absolute; z-index: 1">';
-    }
-    if (data && data.pawn.white) {
-      html += '<img src=assets/white.png height=70px width=70px class="playerPiece white" style="top: 0; position: absolute; z-index: 1">';
-    }
-    return html;
   });
 
-var render = function() {
-  island.style('opacity', function(data) {
-    if (data) {
-      switch(data.status) {
-        case 'afloat':
-          return 1;
-        case 'sinking':
-          return 0.2;
-        case 'sunk':
-          return 0;
+var updateHands = function() {
+  var player1 = d3.select('.player1');
+  var player1Cards = player1.selectAll('.player1Cards').data(player1Hand);
+
+  player1Cards.enter().append('td')
+    .attr('height', handCardSize)
+    .attr('width', handCardSize)
+    .attr('class', 'player1Cards')
+    .style('background-color', function(data) {
+      if (data) {
+        return data.color;
       }
-    } else {
-      return 0;
-    }
-  });
+    });
+
+  var player2 = d3.select('.player2');
+  var player2Cards = player2.selectAll('.player2Cards').data(player2Hand);
+
+  player2Cards.enter().append('td')
+    .attr('height', handCardSize)
+    .attr('width', handCardSize)
+    .attr('class', 'player2Cards')
+    .style('background-color', function(data) {
+      if (data) {
+        return data.color;
+      }
+    });
+};
+
+var updateIsland = function() {
+  island.transition().duration(1000)
+    .style('background-color', function(data) {
+      if (data) {
+        switch(data.status) {
+          case 'afloat':
+            return data.color;
+          case 'sinking':
+            return 'darkblue';
+        }
+      }
+    });
 
   var pawns = d3.selectAll('.playerPiece').
     on('click', function() {
@@ -170,7 +212,7 @@ var render = function() {
     var length = squareArray.length;
     var sideLength = Math.sqrt(length);
 
-    if (row >= sideLength || col >= sideLength) {
+    if (col < 0 || row < 0 || col >= sideLength || row >= sideLength) {
       return -1;
     }
 
@@ -233,7 +275,10 @@ var render = function() {
     });
 };
 
-render();
+updateIsland();
+updateHands();
+
 setInterval(function() {
-  render();
+  updateIsland();
+  updateHands();
 }, refreshRate);

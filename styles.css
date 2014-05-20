@@ -6,3 +6,8 @@ Feel free to use it if you like. */
 body {
   background-color: #FFF;
 }
+
+.water {
+  width: 500px;
+  height: 500px;
+}
