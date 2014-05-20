@@ -26,7 +26,6 @@ var createFloodDeck = function() {
 
     for (var j = 0; j < 6; j++) {
       var isTemple = false;
-      var isStartFor = null;
       var pawn = {
         white: false,
         black: false
@@ -98,7 +97,7 @@ var raiseWaterLevel = function() {
   var newWaterLevel = +currentWaterLevel + 1;
   d3.select('.waterLevel').text(newWaterLevel);
 
-  floodDeck.concat(_.shuffle(floodDiscardDeck.slice()));
+  floodDeck = floodDeck.concat(_.shuffle(floodDiscardDeck.slice()));
   floodDiscardDeck = [];
   drawFloods(newWaterLevel);
 };
@@ -122,14 +121,22 @@ var drawTreasures = function(count, destination) {
 };
 
 var flood = function(tileName) {
-  for (var i = 0; i , islandTiles.length; i++) {
+  var gameOver = false;
+  for (var i = 0; i < islandTiles.length; i++) {
     if (islandTiles[i] && tileName === islandTiles[i].name) {
       if (islandTiles[i].status === 'afloat') {
         islandTiles[i].status = 'sinking';
       } else if (islandTiles[i].status === 'sinking') {
+        if (islandTiles[i].pawn.black || islandTiles[i].pawn.white) {
+          gameOver = true;;
+        }
         islandTiles[i] = null;
         floodDiscardDeck.pop();
       }
+      if (gameOver) {
+        alert('YOUR PAWN IS LOST AT SEA - GAME OVER');
+      }
+
       return;
     }
   }
@@ -140,11 +147,8 @@ var drawFloods = function(count) {
     var drawnCard = floodDeck.pop();
 
     if (!floodDeck.length) {
-      console.log(floodDeck.length);
-      console.log('reshuffling flood deck');
       floodDeck = _.shuffle(floodDiscardDeck.slice());
       floodDiscardDeck = [];
-      console.log(floodDeck.length);
     }
 
     floodDiscardDeck.push(drawnCard);
@@ -237,14 +241,13 @@ var updateHands = function() {
 var updateIsland = function() {
   var island = d3.selectAll('.islandTile').data(islandTiles);
 
-  island.transition().duration(1000)
+  island.transition().duration(500)
     .style('background-color', function(data) {
       if (data) {
-        switch(data.status) {
-          case 'afloat':
-            return data.color;
-          case 'sinking':
-            return 'skyblue';
+        if (data.status === 'afloat') {
+          return data.color;
+        } else if (data.status === 'sinking') {
+          return 'skyblue';
         }
       }
     });
@@ -297,28 +300,26 @@ var updateIsland = function() {
       var col = piece.node().parentNode.cellIndex;
       var row = piece.node().parentNode.parentNode.rowIndex;
       var pieceColor = _.last(piece.node().src.split('/')).replace('.png', '');
+      var key = d3.event.keyCode;
 
-      switch(d3.event.keyCode) {
-        case 38: // up
-          if (isValidMove(col, row - 1)) {
+      if (key === 38) { // up
+        if (isValidMove(col, row - 1)) {
             movePawn(col, row, col, row - 1, pieceColor, piece);
-          }
-          break;
-        case 40: // down
-          if (isValidMove(col, row + 1)) {
+        }
+      } else if (key === 40) { // down
+        if (isValidMove(col, row + 1)) {
             movePawn(col, row, col, row + 1, pieceColor, piece);
-          }
-          break;
-        case 37: // left
-          if (isValidMove(col - 1, row)) {
+        }
+      } else if (key === 37) { // left
+        if (isValidMove(col - 1, row)) {
             movePawn(col, row, col - 1, row, pieceColor, piece);
-          }
-          break;
-        case 39: // right
-          if (isValidMove(col + 1, row)) {
+        }
+      } else if (key === 39) { // right
+        if (isValidMove(col + 1, row)) {
             movePawn(col, row, col + 1, row, pieceColor, piece);
-          }
-          break;
+        }
+      } else if (key === 27) { // esc
+        endTurn(pieceColor);
       }
     });
 };
