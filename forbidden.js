@@ -72,87 +72,106 @@ floodDeck = _.shuffle(floodDeck);
 var islandTiles = createIslandTiles(floodDeck);
 floodDeck = _.shuffle(floodDeck);
 
-var convertColRowToIndex = function(col, row, squareArray) {
-  var length = squareArray.length;
-  var sideLength = Math.sqrt(length);
-
-  if (row >= sideLength || col >= sideLength) {
-    return -1;
-  }
-
-  return row * sideLength + col;
-};
-
-var isValidMove = function(nextSpaceCol, nextSpaceRow) {
-  var index = convertColRowToIndex(nextSpaceCol, nextSpaceRow, islandTiles);
-
-  if (index === -1) {
-    return false;
-  }
-
-  return islandTiles[index] !== null;
-};
-
-var movePawn = function(oldCol, oldRow, newCol, newRow, pieceColor) {
-  var oldIndex = convertColRowToIndex(oldCol, oldRow, islandTiles);
-  var newIndex = convertColRowToIndex(newCol, newRow, islandTiles);
-
-  if(pieceColors.indexOf(pieceColor) !== -1) {
-    islandTiles[oldIndex].pawn[pieceColor] = false;
-    islandTiles[newIndex].pawn[pieceColor] = true;
-  }
-};
-
 var treasureDeck = [];
 var player1Hand = [];
 var player2Hand = [];
 var focus = null;
 
+var island = d3.selectAll('td').data(islandTiles);
+
+island.attr('height', '75px')
+  .attr('width', '75px')
+  .style('background-color', function(data) {
+    if (data) {
+      return data.color;
+    }
+  })
+  .style('opacity', function(data) {
+    if (data) {
+      switch(data.status) {
+        case 'afloat':
+          return 1;
+        case 'sinking':
+          return 0.2;
+        case 'sunk':
+          return 0;
+      }
+    } else {
+      return 0;
+    }
+  })
+  .style('align', 'center')
+  .style('position', 'relative')
+  .html(function(data) {
+    var html = '';
+
+    if (data && data.temple) {
+      html += '<img src="assets/treasureChest.png" height=70px width=70px class="temple" style="top: 0; position: absolute; z-index: 0">';
+    }
+    if (data && data.pawn.black) {
+      html += '<img src=assets/black.png height=70px width=70px class="playerPiece black" style="top: 0; position: absolute; z-index: 1">';
+    }
+    if (data && data.pawn.white) {
+      html += '<img src=assets/white.png height=70px width=70px class="playerPiece white" style="top: 0; position: absolute; z-index: 1">';
+    }
+    return html;
+  });
+
 var render = function() {
-  var island = d3.selectAll('td').data(islandTiles);
-
-  island.attr('height', '75px')
-    .attr('width', '75px')
-    .style('background-color', function(data) {
-      if (data) {
-        return data.color;
+  island.style('opacity', function(data) {
+    if (data) {
+      switch(data.status) {
+        case 'afloat':
+          return 1;
+        case 'sinking':
+          return 0.2;
+        case 'sunk':
+          return 0;
       }
-    })
-    .style('opacity', function(data) {
-      if (data) {
-        switch(data.status) {
-          case 'afloat':
-            return 1;
-          case 'sinking':
-            return 0.2;
-          case 'sunk':
-            return 0;
-        }
-      } else {
-        return 0;
-      }
-    })
-    .style('align', 'center')
-    .style('position', 'relative')
-    .html(function(data) {
-      var html = '';
-
-      if (data && data.temple) {
-        html += '<img src="assets/treasureChest.png" height=70px width=70px style="top: 0; position: absolute; z-index: 0">';
-      }
-      if (data && data.pawn.black) {
-        html += '<img src=assets/black.png height=70px width=70px class="playerPiece black" style="top: 0; position: absolute; z-index: 1">';
-      }
-      if (data && data.pawn.white) {
-        html += '<img src=assets/white.png height=70px width=70px class="playerPiece white" style="top: 0; position: absolute; z-index: 1">';
-      }
-      return html;
-    });
+    } else {
+      return 0;
+    }
+  });
 
   var pawns = d3.selectAll('.playerPiece').
     on('click', function() {
       focus = '.' + this.classList[1];
     });
+
+  var convertColRowToIndex = function(col, row, squareArray) {
+    var length = squareArray.length;
+    var sideLength = Math.sqrt(length);
+
+    if (row >= sideLength || col >= sideLength) {
+      return -1;
+    }
+
+    return row * sideLength + col;
+  };
+
+  var isValidMove = function(nextSpaceCol, nextSpaceRow) {
+    var index = convertColRowToIndex(nextSpaceCol, nextSpaceRow, islandTiles);
+
+    if (index === -1) {
+      return false;
+    }
+
+    return islandTiles[index] !== null;
+  };
+
+  var movePawn = function(oldCol, oldRow, newCol, newRow, pieceColor, piece) {
+    var oldIndex = convertColRowToIndex(oldCol, oldRow, islandTiles);
+    var newIndex = convertColRowToIndex(newCol, newRow, islandTiles);
+
+    if(pieceColors.indexOf(pieceColor) !== -1) {
+      var movingPiece = $(piece.node()).detach();
+
+      islandTiles[oldIndex].pawn[pieceColor] = false;
+      islandTiles[newIndex].pawn[pieceColor] = true;
+
+      $('table tr:eq(' + newRow + ') td:eq(' + newCol + ')').append(movingPiece);
+    }
+  };
 
   d3.select('body').
     on('keydown', function() {
@@ -164,22 +183,22 @@ var render = function() {
       switch(d3.event.keyCode) {
         case 38: // up
           if (isValidMove(col, row - 1)) {
-            movePawn(col, row, col, row - 1, pieceColor);
+            movePawn(col, row, col, row - 1, pieceColor, piece);
           }
           break;
         case 40: // down
           if (isValidMove(col, row + 1)) {
-            movePawn(col, row, col, row + 1, pieceColor);
+            movePawn(col, row, col, row + 1, pieceColor, piece);
           }
           break;
         case 37: // left
           if (isValidMove(col - 1, row)) {
-            movePawn(col, row, col - 1, row, pieceColor);
+            movePawn(col, row, col - 1, row, pieceColor, piece);
           }
           break;
         case 39: // right
           if (isValidMove(col + 1, row)) {
-            movePawn(col, row, col + 1, row, pieceColor);
+            movePawn(col, row, col + 1, row, pieceColor, piece);
           }
           break;
       }
