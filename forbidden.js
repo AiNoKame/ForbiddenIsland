@@ -104,18 +104,22 @@ var raiseWaterLevel = function() {
 
 var drawTreasures = function(count, destination) {
   for (var i = 0; i < count; i++) {
-    var drawnCard = treasureDeck.pop();
-
-    if (!treasureDeck.length) {
-      treasureDeck = _.shuffle(treasureDiscardDeck.slice());
-      treasureDiscardDeck = [];
-    }
-
-    if (drawnCard.rise) {
-      raiseWaterLevel();
-      treasureDiscardDeck.push(drawnCard);
+    if (destination.length >= 5) {
+      break;
     } else {
-      destination.push(drawnCard);
+      var drawnCard = treasureDeck.pop();
+
+      if (!treasureDeck.length) {
+        treasureDeck = _.shuffle(treasureDiscardDeck.slice());
+        treasureDiscardDeck = [];
+      }
+
+      if (drawnCard.rise) {
+        raiseWaterLevel();
+        treasureDiscardDeck.push(drawnCard);
+      } else {
+        destination.push(drawnCard);
+      }
     }
   }
 };
