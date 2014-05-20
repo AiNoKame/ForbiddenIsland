@@ -86,6 +86,11 @@ var treasureDeck = createTreasureDeck(floodDeck);
 var treasureDiscardDeck = [];
 var player1Hand = [];
 var player2Hand = [];
+var playerPiece = {
+  white: player1Hand,
+  black: player2Hand
+};
+var focus = '.white';
 
 var raiseWaterLevel = function() {
   console.log('Water is rising!');
@@ -147,11 +152,29 @@ var drawFloods = function(count) {
   }
 };
 
+var endTurn = function(playerColor) {
+  drawFloods(d3.select('.waterLevel').text());
+  drawTreasures(2, playerPiece[playerColor]);
+  d3.select('.remainingMoves').text('3');
+  if (focus === '.white') {
+    focus = '.black';
+    d3.select('.white').classed('active', false);
+    d3.select('.black').classed('active', true);
+    d3.select('.p1Title').classed('active', false);
+    d3.select('.p2Title').classed('active', true);
+  } else if (focus === '.black') {
+    focus = '.white';
+    d3.select('.black').classed('active', false);
+    d3.select('.white').classed('active', true);
+    d3.select('.p2Title').classed('active', false);
+    d3.select('.p1Title').classed('active', true);
+  }
+};
+
 drawFloods(6);
 drawTreasures(2, player1Hand);
 drawTreasures(2, player2Hand);
 
-var focus = null;
 
 var island = d3.selectAll('.islandTile').data(islandTiles);
 
@@ -175,12 +198,13 @@ island.attr('height', islandTileSize)
         html += '<img src=assets/black.png height=70px width=70px class="playerPiece black" style="top: 0; position: absolute; z-index: 1">';
       }
       if (data.pawn.white) {
-        html += '<img src=assets/white.png height=70px width=70px class="playerPiece white" style="top: 0; position: absolute; z-index: 1">';
+        html += '<img src=assets/white.png height=70px width=70px class="playerPiece white active" style="top: 0; position: absolute; z-index: 1">';
       }
 
       return html;
     }
   });
+
 
 var updateHands = function() {
   var player1 = d3.select('.player1');
@@ -225,11 +249,6 @@ var updateIsland = function() {
       }
     });
 
-  var pawns = d3.selectAll('.playerPiece').
-    on('click', function() {
-      focus = '.' + this.classList[1];
-    });
-
   var convertColRowToIndex = function(col, row, squareArray) {
     var length = squareArray.length;
     var sideLength = Math.sqrt(length);
@@ -257,11 +276,18 @@ var updateIsland = function() {
 
     if(pieceColors.indexOf(pieceColor) !== -1) {
       var movingPiece = $(piece.node()).detach();
+      var currentRemainingMoves = d3.select('.remainingMoves').text();
+      var newRemainingMoves = +currentRemainingMoves - 1;
 
       islandTiles[oldIndex].pawn[pieceColor] = false;
       islandTiles[newIndex].pawn[pieceColor] = true;
 
       $('table tr:eq(' + newRow + ') td:eq(' + newCol + ')').append(movingPiece);
+
+      d3.select('.remainingMoves').text(newRemainingMoves);
+      if (!newRemainingMoves) {
+        endTurn(pieceColor);
+      }
     }
   };
 

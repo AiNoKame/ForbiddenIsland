@@ -12,3 +12,8 @@ body {
   width: 500px;
   height: 500px;
 }
+
+.active {
+  border: ridge;
+  border-color: yellow;
+}
