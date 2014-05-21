@@ -395,6 +395,7 @@ var updateIsland = function() {
       var row = piece.node().parentNode.parentNode.rowIndex;
       var pieceColor = _.last(piece.node().src.split('/')).replace('.png', '');
       var key = d3.event.keyCode;
+      console.log(key);
 
       if (key === 38) { // up
         if (isValidMove(col, row - 1)) {
@@ -414,25 +415,25 @@ var updateIsland = function() {
         }
       } else if (key === 27) { // esc
         endTurn(pieceColor);
-      } else if (key === 49) { // 1
+      } else if (key === 65) { // a
         var playerHand = playerPiece[pieceColor];
         console.log('player color ', pieceColor);
         console.log('card to discard ', playerHand[0]);
         discardTreasure(playerHand, 0);
         console.log('card should be different... ', playerHand[0]);
-      } else if (key === 50) { // 2
+      } else if (key === 83) { // s
         var playerHand = playerPiece[pieceColor];
 
         discardTreasure(playerHand, 1);
-      } else if (key === 51) { // 3
+      } else if (key === 68) { // d
         var playerHand = playerPiece[pieceColor];
 
         discardTreasure(playerHand, 2);
-      } else if (key === 52) { // 5
+      } else if (key === 70) { // f
         var playerHand = playerPiece[pieceColor];
 
         discardTreasure(playerHand, 3);
-      } else if (key === 53) { // 5
+      } else if (key === 71) { // g
         var playerHand = playerPiece[pieceColor];
 
         discardTreasure(playerHand, 4);
