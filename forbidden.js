@@ -352,19 +352,19 @@ var updateIsland = function() {
         var playerHand = playerPiece[pieceColor];
 
         discardTreasure(playerHand, 0);
-      } else if (key === 49) { // 2
+      } else if (key === 50) { // 2
         var playerHand = playerPiece[pieceColor];
 
         discardTreasure(playerHand, 1);
-      } else if (key === 49) { // 3
+      } else if (key === 51) { // 3
         var playerHand = playerPiece[pieceColor];
 
         discardTreasure(playerHand, 2);
-      } else if (key === 49) { // 5
+      } else if (key === 52) { // 5
         var playerHand = playerPiece[pieceColor];
 
         discardTreasure(playerHand, 3);
-      } else if (key === 49) { // 5
+      } else if (key === 53) { // 5
         var playerHand = playerPiece[pieceColor];
 
         discardTreasure(playerHand, 4);
