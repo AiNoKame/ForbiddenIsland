@@ -1,6 +1,7 @@
 var refreshRate = 500;
 var islandTileSize = '75px';
 var handCardSize = '30px';
+var handLimit = 5;
 var colors = ['red', 'teal', 'orange', 'purple'];
 var pieceColors = ['black', 'white'];
 
@@ -104,7 +105,7 @@ var raiseWaterLevel = function() {
 
 var drawTreasures = function(count, destination) {
   for (var i = 0; i < count; i++) {
-    if (destination.length >= 5) {
+    if (destination.length >= handLimit) {
       break;
     } else {
       var drawnCard = treasureDeck.pop();
@@ -121,6 +122,12 @@ var drawTreasures = function(count, destination) {
         destination.push(drawnCard);
       }
     }
+  }
+};
+
+var discardTreasure = function(playerHand, index) {
+  if (playerHand.length >= (index + 1)) {
+    playerHand.splice(index, 1);
   }
 };
 
@@ -218,6 +225,12 @@ var updateHands = function() {
   var player1 = d3.select('.player1');
   var player1Cards = player1.selectAll('.player1Cards').data(player1Hand);
 
+  player1Cards.style('background-color', function(data) {
+      if (data) {
+        return data.color;
+      }
+    });
+
   player1Cards.enter().append('td')
     .attr('height', handCardSize)
     .attr('width', handCardSize)
@@ -228,8 +241,16 @@ var updateHands = function() {
       }
     });
 
+  player1Cards.exit().remove();
+
   var player2 = d3.select('.player2');
   var player2Cards = player2.selectAll('.player2Cards').data(player2Hand);
+
+  player1Cards.style('background-color', function(data) {
+      if (data) {
+        return data.color;
+      }
+    });
 
   player2Cards.enter().append('td')
     .attr('height', handCardSize)
@@ -240,6 +261,8 @@ var updateHands = function() {
         return data.color;
       }
     });
+
+  player2Cards.exit().remove();
 };
 
 var updateIsland = function() {
@@ -305,6 +328,7 @@ var updateIsland = function() {
       var row = piece.node().parentNode.parentNode.rowIndex;
       var pieceColor = _.last(piece.node().src.split('/')).replace('.png', '');
       var key = d3.event.keyCode;
+      console.log(key);
 
       if (key === 38) { // up
         if (isValidMove(col, row - 1)) {
@@ -324,6 +348,26 @@ var updateIsland = function() {
         }
       } else if (key === 27) { // esc
         endTurn(pieceColor);
+      } else if (key === 49) { // 1
+        var playerHand = playerPiece[pieceColor];
+
+        discardTreasure(playerHand, 0);
+      } else if (key === 49) { // 2
+        var playerHand = playerPiece[pieceColor];
+
+        discardTreasure(playerHand, 1);
+      } else if (key === 49) { // 3
+        var playerHand = playerPiece[pieceColor];
+
+        discardTreasure(playerHand, 2);
+      } else if (key === 49) { // 5
+        var playerHand = playerPiece[pieceColor];
+
+        discardTreasure(playerHand, 3);
+      } else if (key === 49) { // 5
+        var playerHand = playerPiece[pieceColor];
+
+        discardTreasure(playerHand, 4);
       }
     });
 };
