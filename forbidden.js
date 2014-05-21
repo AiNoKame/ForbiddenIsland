@@ -2,8 +2,15 @@ var refreshRate = 500;
 var islandTileSize = '75px';
 var handCardSize = '30px';
 var handLimit = 5;
+var actionCount = 6;
 var colors = ['red', 'teal', 'orange', 'purple'];
 var pieceColors = ['black', 'white'];
+var treasuresClaimed = {
+  red: false,
+  teal: false,
+  orange: false,
+  purple: false
+};
 
 var createPieces = function() {
   var pieces = [];
@@ -170,7 +177,7 @@ var drawFloods = function(count) {
 var endTurn = function(playerColor) {
   drawFloods(d3.select('.waterLevel').text());
   drawTreasures(2, playerPiece[playerColor]);
-  d3.select('.remainingMoves').text('3');
+  d3.select('.remainingMoves').text(actionCount.toString());
   if (focus === '.white') {
     focus = '.black';
     d3.select('.white').classed('active', false);
@@ -246,7 +253,7 @@ var updateHands = function() {
   var player2 = d3.select('.player2');
   var player2Cards = player2.selectAll('.player2Cards').data(player2Hand);
 
-  player1Cards.style('background-color', function(data) {
+  player2Cards.style('background-color', function(data) {
       if (data) {
         return data.color;
       }
@@ -300,11 +307,71 @@ var updateIsland = function() {
     return islandTiles[index] !== null;
   };
 
+  var shore = function(col, row, pieceColor) {
+    var index = convertColRowToIndex(col, row, islandTiles);
+    if (islandTiles[index].status !== 'afloat') {
+      var currentRemainingMoves = d3.select('.remainingMoves').text();
+      var newRemainingMoves = +currentRemainingMoves - 1;
+
+      islandTiles[index].status = 'afloat';
+
+      d3.select('.remainingMoves').text(newRemainingMoves);
+      if (!newRemainingMoves) {
+        endTurn(pieceColor);
+      }
+    }
+  };
+
+  var claimTreasure = function(col, row, pieceColor, playerHand) {
+    var index = convertColRowToIndex(col, row, islandTiles);
+    var color = islandTiles[index].color;
+    var colorCount = 0;
+    var indices = [];
+
+    for (var i = 0; i < playerHand.length; i++) {
+      if (playerHand[i].color === color) {
+        colorCount++;
+        if (colorCount < 4) {
+          indices.push(i);
+        }
+      }
+    }
+
+    if (islandTiles[index].temple && colorCount >= 4) {
+      var currentRemainingMoves = d3.select('.remainingMoves').text();
+      var newRemainingMoves = +currentRemainingMoves - 1;
+      var treasures = d3.select('.treasuresClaimed').text();
+      var allClaimed = true;
+
+      for (var j = 0; j < indices.length; j++) {
+        discardTreasure(playerHand, indices[j]);
+      }
+
+      treasuresClaimed[color] = true;
+      d3.select('.treasuresClaimed').text(treasures + ' ' + color);
+      d3.select('.remainingMoves').text(newRemainingMoves);
+
+      for (var key in treasuresClaimed) {
+        if (!treasuresClaimed[key]) {
+          allClaimed = false;
+        }
+      }
+
+      if (allClaimed) {
+        alert('YOU ARE THE GREATEST TREASURE HUNTER IN THE WORLD! YOU WIN!');
+      };
+
+      if (!newRemainingMoves) {
+        endTurn(pieceColor);
+      }
+    }
+  };
+
   var movePawn = function(oldCol, oldRow, newCol, newRow, pieceColor, piece) {
     var oldIndex = convertColRowToIndex(oldCol, oldRow, islandTiles);
     var newIndex = convertColRowToIndex(newCol, newRow, islandTiles);
 
-    if(pieceColors.indexOf(pieceColor) !== -1) {
+    if (pieceColors.indexOf(pieceColor) !== -1) {
       var movingPiece = $(piece.node()).detach();
       var currentRemainingMoves = d3.select('.remainingMoves').text();
       var newRemainingMoves = +currentRemainingMoves - 1;
@@ -328,7 +395,6 @@ var updateIsland = function() {
       var row = piece.node().parentNode.parentNode.rowIndex;
       var pieceColor = _.last(piece.node().src.split('/')).replace('.png', '');
       var key = d3.event.keyCode;
-      console.log(key);
 
       if (key === 38) { // up
         if (isValidMove(col, row - 1)) {
@@ -350,8 +416,10 @@ var updateIsland = function() {
         endTurn(pieceColor);
       } else if (key === 49) { // 1
         var playerHand = playerPiece[pieceColor];
-
+        console.log('player color ', pieceColor);
+        console.log('card to discard ', playerHand[0]);
         discardTreasure(playerHand, 0);
+        console.log('card should be different... ', playerHand[0]);
       } else if (key === 50) { // 2
         var playerHand = playerPiece[pieceColor];
 
@@ -368,6 +436,10 @@ var updateIsland = function() {
         var playerHand = playerPiece[pieceColor];
 
         discardTreasure(playerHand, 4);
+      } else if (key === 32) { // space bar
+        shore(col, row, pieceColor);
+      } else if (key === 13) { // return
+        claimTreasure(col, row, pieceColor, playerPiece[pieceColor]);
       }
     });
 };

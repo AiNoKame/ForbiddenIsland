@@ -61,16 +61,7 @@
     </div>
     <div class='playerHUD'>
       <div>
-        <div>Remaining Actions <span class='remainingMoves'>3</div>
-        <div class='controls'>
-          <h4>Available Actions</h5>
-          <ul>
-            <li>Movement: up, down, left, right arrow keys</li>
-            <li>Shore (unsink space): space bar</li>
-            <li>Discard Cards (doesn't use up any actions): 1, 2, 3, 4, 5 keys</li>
-            <li>Claim treasure (4 cards of the same color in hand + on treasure space of that color): enter</li>
-          </ul>
-        </div>
+        <div><h4>Treasures Claimed: <span class='treasuresClaimed'></span></h4></div>
         <table>
           <tr>
             <td><span class='p1Title active'>P1</span></td>
@@ -83,6 +74,18 @@
           <tr class='player2'>
           </tr>
         </table>
+        <div>Remaining Actions <span class='remainingMoves'>6</div>
+        <div class='controls'>
+          <h4>Available Actions</h5>
+          <ul>
+            <li>Movement: up, down, left, right arrow keys</li>
+            <li>Shore (unsink space): space bar</li>
+            <li>Discard Cards (doesn't use up any actions): 1, 2, 3, 4, 5 keys</li>
+            <li>Claim treasure (4 cards of the same color in hand + on treasure space of that color): enter</li>
+            <li>End turn: esc</li>
+          </ul>
+        </div>
+        <div><h4>Claim each treasure  (red, orange, green, and purples) to win!</h4></div>
       </div>
     </div>
     <script src='bower_components/d3/d3.min.js' charset='utf-8'></script>
